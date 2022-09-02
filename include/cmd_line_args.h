@@ -23,11 +23,14 @@ struct CommandLineArgs {
 		Unknown
 	};
 
+	using ErrorCallbackT = void(*)(ErrorCode code, const char* param, const char* input, const char* description);
+
+
 	/// parse command line arguments that come from main
 	/// @param[in] numArgs the number of the arguments
 	/// @param[in] args  array of arguments that comes from main function where
 	/// args[0] is the name of the program, args[1] is the first argument and so on
-	ErrorCode parse(const int numArgs, char** args, void(*errorCallback)(ErrorCode err, const char* param, const char* error) = nullptr);
+	ErrorCode parse(const int numArgs, char** args, ErrorCallbackT errorCallback = nullptr);
 	/// Add a info for possible parameter that can come from the command line. All possible parameters must
 	/// be added before calling parse. Calling this does not add a parameter only information.
 	/// @param[in] name name of the param, must not include - or =.

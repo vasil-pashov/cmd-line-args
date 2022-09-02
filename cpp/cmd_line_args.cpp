@@ -16,7 +16,7 @@ CommandLineArgs::ParamInfo::ParamInfo(
 	required(required)
 { }
 
-CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, void(*errorCallback)(ErrorCode, const char* param, const char* error)) {
+CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, ErrorCallbackT errorCallback) {
     // argv[0] is the name of the program (exe), that is why the for starts from 1
     for (int i = 1; i < argc; ++i) {
         const char* arg = argv[i];
@@ -40,7 +40,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, v
                 const ErrorCode code = ErrorCode::UnknownParameter;
                 if (errorCallback) {
                     const std::string& error = std::format("Unknown parameter {}", name);
-                    errorCallback(code, name.c_str(), error.c_str());
+                    errorCallback(code, name.c_str(), arg, error.c_str());
                 }
                 return code;
             }
@@ -56,7 +56,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, v
                         name.c_str(),
                         arg
                     );
-                    errorCallback(code, name.c_str(), error.c_str());
+                    errorCallback(code, name.c_str(), arg, error.c_str());
                 }
                 return code;
             } else if (!hasParams && it->second.type != Type::Flag) {
@@ -67,7 +67,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, v
                         "Received input is: {}",
                         arg
                     );
-                    errorCallback(code, name.c_str(), error.c_str());
+                    errorCallback(code, name.c_str(), arg, error.c_str());
                 }
                 return code;
             }
@@ -93,7 +93,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, v
                                 arg,
                                 arg
                             );
-                            errorCallback(ErrorCode::WrongValueType, arg, error.c_str());
+                            errorCallback(ErrorCode::WrongValueType, name.c_str(), arg, error.c_str());
                         }
                         return code;
                     }
@@ -115,7 +115,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, v
                             "There must be no intervals surrounding \'=\' or after the \'-\'!",
                             arg
                         );
-                        errorCallback(code, name.c_str(), error.c_str());
+                        errorCallback(code, name.c_str(), arg, error.c_str());
                     }
                     return code;
                 }
@@ -129,7 +129,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, v
                     "There must be no intervals surrounding \'=\' or after the \'-\'!",
                     arg
                 );
-                errorCallback(code, arg, error.c_str());
+                errorCallback(code, arg, arg, error.c_str());
             }
             return code;
         }
@@ -139,7 +139,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, v
             const ErrorCode code = ErrorCode::MissingParameter;
             if (errorCallback) {
                 const std::string& error = std::format("Required parameter {} cannot be found!", it.first.c_str());
-                errorCallback(ErrorCode::MissingParameter, it.first.c_str(), error.c_str());
+                errorCallback(ErrorCode::MissingParameter, it.first.c_str(), "", error.c_str());
             }
             return code;
         }

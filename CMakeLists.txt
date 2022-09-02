@@ -17,6 +17,10 @@ add_library(${PROJECT_NAME} STATIC
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
 set(FETCH_CONTENT_LIBS)
+
+# First step only add it to fetch content
+# After all content is added we will call FetchContent_MakeAvaliable
+# with all libs. And the we can call add_subdirectory(tests).
 if(${CMD_LINE_ARGS_WITH_TESTS})
 	set(doctest_version 2.4.9)
 	FetchContent_Declare(
@@ -83,7 +87,7 @@ if(${CMD_LINE_ARGS_WITH_INSTALL})
 endif()
 
 if(NOT "${FETCH_CONTENT_LIBS}" STREQUAL "")
-	FetchContent_MakeAvailable(FETCH_CONTENT_LIBS)
+	FetchContent_MakeAvailable(${FETCH_CONTENT_LIBS})
 endif()
 
 if(${CMD_LINE_ARGS_WITH_TESTS})
