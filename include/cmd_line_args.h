@@ -140,8 +140,6 @@ private:
 
 	std::unordered_map<std::string, ParamInfo> paramInfo;
 	std::unordered_map<std::string, ParamVal> paramValues;
-	using ValuesConstIt = std::unordered_map<std::string, ParamVal>::const_iterator;
-	using InfoConstIt = std::unordered_map<std::string, ParamInfo>::const_iterator;
 };
 
 }

@@ -25,8 +25,8 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
             // j-1 is the length, subtract 1 to account for the parameter
             const int nameLen = j - 1;
             std::string name(arg + 1, nameLen);
-            InfoConstIt it = paramInfo.find(name);
-            if (it == paramInfo.end()) {
+            auto infoIterator = paramInfo.find(name);
+            if (infoIterator == paramInfo.end()) {
                 const ErrorCode code = ErrorCode::UnknownParameter;
                 if (errorCallback) {
                     const std::string& error = std::format("Unknown parameter {}", name);
@@ -34,10 +34,10 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
                 }
                 return code;
             }
-            if (!hasParams && it->second.type == Type::Flag) {
+            if (!hasParams && infoIterator->second.type == Type::Flag) {
                 paramValues[name] = true;
                 continue;
-            } else if (hasParams && it->second.type == Type::Flag) {
+            } else if (hasParams && infoIterator->second.type == Type::Flag) {
                 const ErrorCode code = ErrorCode::FlagHasValue;
                 if (errorCallback) {
                     const std::string& error = std::format(
@@ -49,7 +49,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
                     errorCallback(code, name.c_str(), arg, error.c_str());
                 }
                 return code;
-            } else if (!hasParams && it->second.type != Type::Flag) {
+            } else if (!hasParams && infoIterator->second.type != Type::Flag) {
                 const ErrorCode code = ErrorCode::MissingValue;
                 if (errorCallback) {
                     const std::string& error = std::format(
@@ -64,7 +64,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
             
             ParamVal val;
             const int paramStartIndex = j + 1;
-            switch (it->second.type) {
+            switch (infoIterator->second.type) {
                 case Type::Int: {
                     char* next;
                     const int res = strtol(arg + paramStartIndex, &next, 0);
