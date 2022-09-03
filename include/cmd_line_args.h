@@ -39,25 +39,7 @@ struct CommandLineArgs {
 	/// If the types don't match or the parameter was not passed (except for the case of bool parameters)
 	/// then the optional will be empty.
 	template<typename T>
-	std::optional<T> getValue(const std::string& param) {
-		const auto valueIt = paramValues.find(param);
-
-		if (valueIt == paramValues.end()) {
-			if constexpr (std::is_same_v<T, bool>) {
-				const auto infoIt = paramInfo.find(param);
-				if (infoIt != paramInfo.end()) {
-					return false;
-				}
-			}
-			return {};
-		}
-
-		if (!std::holds_alternative<T>(valueIt->second)) {
-			return {};
-		}
-
-		return std::get<T>(valueIt->second);
-	}
+	std::optional<T> getValue(const std::string& param);
 	/// Add a info for possible parameter that can come from the command line. All possible parameters must
 	/// be added before calling parse. Calling this does not add a parameter only information.
 	/// @tparam T The type of the parameter. It will be used when parsing the argv to ensure that the passed
@@ -66,17 +48,7 @@ struct CommandLineArgs {
 	/// @param[in] description description for the parameter can include everything. This is shown when calling print
 	/// @param[in] required if true the parameter is required. If a parameter is required but not found parse will return error
 	template<typename T, typename NameT, typename DescT>
-	ErrorCode addParam(NameT&& name, DescT&& description, bool required) {
-		constexpr Type t = getType<T>();
-		std::string paramName = std::forward<NameT>(name);
-		auto it = paramInfo.find(paramName);
-		if (it != paramInfo.end()) {
-			return ErrorCode::ParameterExists;
-		}
-		constexpr Type type = getType<T>();
-		paramInfo[std::move(paramName)] = ParamInfo(std::forward<DescT>(description), type, required);
-		return ErrorCode::Success;
-	}
+	ErrorCode addParam(NameT&& name, DescT&& description, bool required);
 	/// parse command line arguments that come from main
 	/// @param[in] numArgs The number of the arguments
 	/// @param[in] args An array of arguments that comes from main function where
@@ -85,9 +57,9 @@ struct CommandLineArgs {
 	/// @returns The code of the first error encounterd during the parsing or ErrorCode::Success in case of no errors
 	ErrorCode parse(const int numArgs, char** args, ErrorCallbackT errorCallback = nullptr);
 	/// Check if the parameter has been parsed. This is the way to check if flag parameter (param with no type) has been set.
-	/// @param[in] name the name of the parameter
+	/// @param[in] param The name of the parameter
 	/// @retval true if the parameter was parsed, false otherwise
-	bool isSet(const char* name) const;
+	bool isSet(const std::string& param) const;
 	/// Show the parameters with their description
 	/// @param[in,out] f File stream where parameters will be printed
 	void print(FILE* f);
@@ -141,5 +113,39 @@ private:
 	std::unordered_map<std::string, ParamInfo> paramInfo;
 	std::unordered_map<std::string, ParamVal> paramValues;
 };
+
+template<typename T, typename NameT, typename DescT>
+CommandLineArgs::ErrorCode CommandLineArgs::addParam(NameT&& name, DescT&& description, bool required) {
+	constexpr Type t = getType<T>();
+	std::string paramName = std::forward<NameT>(name);
+	auto it = paramInfo.find(paramName);
+	if (it != paramInfo.end()) {
+		return ErrorCode::ParameterExists;
+	}
+	constexpr Type type = getType<T>();
+	paramInfo[std::move(paramName)] = ParamInfo(std::forward<DescT>(description), type, required);
+	return ErrorCode::Success;
+}
+
+template<typename T>
+std::optional<T> CommandLineArgs::getValue(const std::string& param) {
+	const auto valueIt = paramValues.find(param);
+
+	if (valueIt == paramValues.end()) {
+		if constexpr (std::is_same_v<T, bool>) {
+			const auto infoIt = paramInfo.find(param);
+			if (infoIt != paramInfo.end()) {
+				return false;
+			}
+		}
+		return {};
+	}
+
+	if (!std::holds_alternative<T>(valueIt->second)) {
+		return {};
+	}
+
+	return std::get<T>(valueIt->second);
+}
 
 }
