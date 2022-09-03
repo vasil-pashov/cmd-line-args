@@ -18,6 +18,7 @@ struct CommandLineArgs {
 		FlagHasValue,
 		MissingValue,
 		ParameterExists,
+		WrongParamForat,
 		Unknown
 	};
 

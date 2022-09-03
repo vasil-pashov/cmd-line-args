@@ -34,10 +34,11 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
                 }
                 return code;
             }
-            if (!hasParams && infoIterator->second.type == Type::Flag) {
-                paramValues[name] = true;
-                continue;
-            } else if (hasParams && infoIterator->second.type == Type::Flag) {
+
+            // Check values passed to parameters
+            // Flags should not have values
+            // Other types must have values
+            if (hasParams && infoIterator->second.type == Type::Flag) {
                 const ErrorCode code = ErrorCode::FlagHasValue;
                 if (errorCallback) {
                     const std::string& error = std::format(
@@ -62,6 +63,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
                 return code;
             }
             
+            // Parse the value for the parameter
             ParamVal val;
             const int paramStartIndex = j + 1;
             switch (infoIterator->second.type) {
@@ -92,6 +94,9 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
                 case Type::String: {
                     val = std::string(arg + paramStartIndex);
                 } break;
+                case Type::Flag: {
+                    val = true;
+                } break;
                 default: {
                     assert(false);
                     const ErrorCode code = ErrorCode::Unknown;
@@ -108,7 +113,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
             }
             paramValues[name] = val;
         } else {
-            const ErrorCode code = ErrorCode::Unknown;
+            const ErrorCode code = ErrorCode::WrongParamForat;
             if (errorCallback) {
                 const std::string& error = std::format(
                     "Unknown input %s. All arguments must start with \'-\' and use \'=\' for setting value."
@@ -120,6 +125,8 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
             return code;
         }
     }
+
+    // Check if all required parameters are passed
     for (auto& it : paramInfo) {
         if (it.second.required && paramValues.find(it.first) == paramValues.end()) {
             const ErrorCode code = ErrorCode::MissingParameter;
