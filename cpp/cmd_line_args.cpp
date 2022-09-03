@@ -6,16 +6,6 @@
 
 namespace CMD {
 
-CommandLineArgs::ParamInfo::ParamInfo(
-	const char* description,
-	const Type type,
-	const bool required
-) :
-	description(std::string(description)),
-	type(type),
-	required(required)
-{ }
-
 CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, ErrorCallbackT errorCallback) {
     // argv[0] is the name of the program (exe), that is why the for starts from 1
     for (int i = 1; i < argc; ++i) {
@@ -145,21 +135,6 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
 
 CommandLineArgs::~CommandLineArgs() {
 	freeMem();
-}
-
-CommandLineArgs::ErrorCode CommandLineArgs::addParam(
-	const char* name,
-	const char* description,
-	const Type type,
-	const bool required
-) {
-    const std::string paramName(name);
-    auto it = paramInfo.find(paramName);
-    if (it != paramInfo.end()) {
-        return ErrorCode::ParameterExists;
-    }
-	paramInfo[paramName] = ParamInfo(description, type, required);
-    return ErrorCode::Success;
 }
 
 bool CommandLineArgs::isSet(const char* name) const {

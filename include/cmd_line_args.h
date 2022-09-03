@@ -65,10 +65,17 @@ struct CommandLineArgs {
 	/// @param[in] name name of the param, must not include - or =.
 	/// @param[in] description description for the parameter can include everything. This is shown when calling print
 	/// @param[in] required if true the parameter is required. If a parameter is required but not found parse will return error
-	template<typename T>
-	ErrorCode addParam(const char* name, const char* description, bool required) {
+	template<typename T, typename NameT, typename DescT>
+	ErrorCode addParam(NameT&& name, DescT&& description, bool required) {
 		constexpr Type t = getType<T>();
-		return addParam(name, description, t, required);
+		std::string paramName = std::forward<NameT>(name);
+		auto it = paramInfo.find(paramName);
+		if (it != paramInfo.end()) {
+			return ErrorCode::ParameterExists;
+		}
+		constexpr Type type = getType<T>();
+		paramInfo[std::move(paramName)] = ParamInfo(std::forward<DescT>(description), type, required);
+		return ErrorCode::Success;
 	}
 	/// parse command line arguments that come from main
 	/// @param[in] numArgs The number of the arguments
@@ -110,19 +117,22 @@ private:
 			static_assert(sizeof(T) < 0, "Unknown type");
 		}
 	}
-	/// Add a info for possible parameter that can come from the command line. All possible parameters must
-	/// be added before calling parse. Calling this does not add a parameter only information.
-	/// @param[in] name The name of the parameter, must not include - or =.
-	/// @param[in] description The description for the parameter can include everything. This is shown when calling print
-	/// @param[in] type The internal type of the parameter.
-	/// @param[in] required if true the parameter is required. If a parameter is required but not found parse will return error
-	ErrorCode addParam(const char* name, const char* description, const Type type, const bool required);
 
+	/// @brief Internal structure to hold information about each parameter
 	struct ParamInfo {
 		ParamInfo() = default;
-		ParamInfo(const char* description, const Type type, const bool required);
+		template<typename DescT>
+		ParamInfo(DescT&& description, const Type type, const bool required) :
+			description(std::forward<DescT>(description)),
+			type(type),
+			required(required)
+		{ }
+		/// Description of the parameter. Printed when CommandLineArgs::print is called
 		std::string description;
+		/// Internal type of parameter. Used when the value is parsed. Matches to at least
+		/// one C++ type.
 		Type type;
+		/// If the parameter is required and not passed the parse will fail.
 		bool required;
 	};
 
