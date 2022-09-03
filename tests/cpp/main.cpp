@@ -40,7 +40,7 @@ TEST_SUITE("Parse Input") {
 			char* argv[argc] = {"program", "-intParam=4"};
 			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
 			REQUIRE(parser.isSet("intParam"));
-			const std::optional val = parser.getVal<int>("intParam");
+			const std::optional val = parser.getValue<int>("intParam");
 			REQUIRE_EQ(val.value(), 4);
 		}
 
@@ -75,7 +75,7 @@ TEST_SUITE("Parse Input") {
 			char* argv[argc] = {"program", "-stringParam= random string with \n escaped \t chars "};
 			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
 			REQUIRE(parser.isSet("stringParam"));
-			const std::optional<std::string>& val = parser.getVal<std::string>("stringParam");
+			const std::optional<std::string>& val = parser.getValue<std::string>("stringParam");
 			REQUIRE_EQ(strcmp(val.value().c_str() , " random string with \n escaped \t chars "), 0);
 		}
 
@@ -83,7 +83,7 @@ TEST_SUITE("Parse Input") {
 			char* argv[argc] = {"program", "-stringParam="};
 			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
 			REQUIRE(parser.isSet("stringParam"));
-			const std::optional<std::string>& val = parser.getVal<std::string>("stringParam");
+			const std::optional<std::string>& val = parser.getValue<std::string>("stringParam");
 			REQUIRE_EQ(strcmp(val.value().c_str(), ""), 0);
 		}
 	}

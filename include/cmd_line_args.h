@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <string>
 #include <optional>
+#include <variant>
 
 namespace CMD {
 
@@ -38,24 +39,19 @@ struct CommandLineArgs {
 	}
 
 	template<typename T>
-	std::optional<T> getVal(const std::string& param) {
+	std::optional<T> getValue(const std::string& param) {
 		auto valueIt = paramValues.find(param);
 		if (valueIt == paramValues.end()) {
 			return {};
 		}
+
 		constexpr Type t = getType<T>();
 		auto descIt = paramInfo.find(param);
 		if (t != descIt->second.type) {
 			return {};
 		}
 
-		if constexpr (t == Type::Int) {
-			return valueIt->second.intVal;
-		} else if constexpr (t == Type::String) {
-			return valueIt->second.stringVal;
-		} else {
-			static_assert(sizeof(T) < 0, "Unknown type");
-		}
+		return std::get<T>(valueIt->second);
 	}
 
 	/// parse command line arguments that come from main
@@ -89,10 +85,9 @@ private:
 		Type type;
 		bool required;
 	};
-	union ParamVal {
-		int intVal;
-		char* stringVal;
-	};
+
+	using ParamVal = std::variant<int, std::string>;
+
 	std::unordered_map<std::string, ParamInfo> paramInfo;
 	std::unordered_map<std::string, ParamVal> paramValues;
 	using ValuesConstIt = std::unordered_map<std::string, ParamVal>::const_iterator;

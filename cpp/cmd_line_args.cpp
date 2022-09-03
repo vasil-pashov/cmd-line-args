@@ -97,14 +97,10 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
                         }
                         return code;
                     }
-                    val.intVal = res;
+                    val = res;
                 } break;
                 case Type::String: {
-                    // Don't forget it starts with '-'
-                    const int len = strlen(arg) - j;
-                    val.stringVal = new char[len + 1];
-                    strcpy(val.stringVal, arg + paramStartIndex);
-                    val.stringVal[len] = '\0';
+                    val = std::string(arg + paramStartIndex);
                 } break;
                 default: {
                     assert(false);
@@ -165,12 +161,6 @@ bool CommandLineArgs::isSet(const char* name) const {
 }
 
 void CommandLineArgs::freeValues() {
-	for (auto& it : paramValues) {
-		const bool isString = paramInfo[it.first].type == Type::String;
-		if (isString) {
-			delete[] it.second.stringVal;
-		}
-	}
 	paramValues.clear();
 }
 
