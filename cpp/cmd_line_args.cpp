@@ -160,24 +160,6 @@ void CommandLineArgs::addParam(
 	paramInfo[std::string(name)] = ParamInfo(description, type, required);
 }
 
-const int* CommandLineArgs::getIntVal(const char* name) const {
-	const std::string paramName(name);
-	ValuesConstIt it = paramValues.find(paramName);
-	if (it != paramValues.end()) {
-		return &it->second.intVal;
-	}
-	return nullptr;
-}
-
-const char* CommandLineArgs::getStringVal(const char* name) const {
-	const std::string paramName(name);
-	ValuesConstIt it = paramValues.find(paramName);
-	if (it != paramValues.end()) {
-		return it->second.stringVal;
-	}
-	return nullptr;
-}
-
 bool CommandLineArgs::isSet(const char* name) const {
 	return paramValues.find(std::string(name)) != paramValues.end();
 }

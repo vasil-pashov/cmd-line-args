@@ -40,7 +40,8 @@ TEST_SUITE("Parse Input") {
 			char* argv[argc] = {"program", "-intParam=4"};
 			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
 			REQUIRE(parser.isSet("intParam"));
-			REQUIRE_EQ(*parser.getIntVal("intParam"), 4);
+			const std::optional val = parser.getVal<int>("intParam");
+			REQUIRE_EQ(val.value(), 4);
 		}
 
 		SUBCASE("Int param must have a value") {
@@ -74,14 +75,16 @@ TEST_SUITE("Parse Input") {
 			char* argv[argc] = {"program", "-stringParam= random string with \n escaped \t chars "};
 			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
 			REQUIRE(parser.isSet("stringParam"));
-			REQUIRE_EQ(strcmp(parser.getStringVal("stringParam")," random string with \n escaped \t chars "), 0);
+			const std::optional<std::string>& val = parser.getVal<std::string>("stringParam");
+			REQUIRE_EQ(strcmp(val.value().c_str() , " random string with \n escaped \t chars "), 0);
 		}
 
 		SUBCASE("String param can be empty") {
 			char* argv[argc] = {"program", "-stringParam="};
 			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
 			REQUIRE(parser.isSet("stringParam"));
-			REQUIRE_EQ(strcmp(parser.getStringVal("stringParam"), ""), 0);
+			const std::optional<std::string>& val = parser.getVal<std::string>("stringParam");
+			REQUIRE_EQ(strcmp(val.value().c_str(), ""), 0);
 		}
 	}
 }
