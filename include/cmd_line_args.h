@@ -10,6 +10,12 @@ namespace CMD {
 struct CommandLineArgs {
 	~CommandLineArgs();
 
+	CommandLineArgs(const CommandLineArgs&) = delete;
+	CommandLineArgs& operator=(const CommandLineArgs&) = delete;
+
+	CommandLineArgs(CommandLineArgs&&) = default;
+	CommandLineArgs& operator=(CommandLineArgs&&) = default;
+
 	enum class ErrorCode {
 		Success = 0,
 		MissingParameter,
