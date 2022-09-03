@@ -45,7 +45,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
                 return code;
             }
             if (!hasParams && it->second.type == Type::Flag) {
-                paramValues[name] = ParamVal();
+                paramValues[name] = true;
                 continue;
             } else if (hasParams && it->second.type == Type::Flag) {
                 const ErrorCode code = ErrorCode::FlagHasValue;
@@ -147,13 +147,19 @@ CommandLineArgs::~CommandLineArgs() {
 	freeMem();
 }
 
-void CommandLineArgs::addParam(
+CommandLineArgs::ErrorCode CommandLineArgs::addParam(
 	const char* name,
 	const char* description,
 	const Type type,
 	const bool required
 ) {
-	paramInfo[std::string(name)] = ParamInfo(description, type, required);
+    const std::string paramName(name);
+    auto it = paramInfo.find(paramName);
+    if (it != paramInfo.end()) {
+        return ErrorCode::ParameterExists;
+    }
+	paramInfo[paramName] = ParamInfo(description, type, required);
+    return ErrorCode::Success;
 }
 
 bool CommandLineArgs::isSet(const char* name) const {
