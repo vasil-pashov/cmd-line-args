@@ -40,7 +40,10 @@ namespace CMD {
 /// @endcode
 class CommandLineArgs {
 public:
-	CommandLineArgs() = default;
+	CommandLineArgs() :
+		descriptionGenerated(false),
+		programName("<program_name>")
+	{ }
 	~CommandLineArgs();
 
 	CommandLineArgs(const CommandLineArgs&) = delete;
@@ -128,7 +131,7 @@ public:
 	ErrorCode parse(const int numArgs, char** args, ErrorCallbackT errorCallback = nullptr);
 	/// @brief Show the parameters with their description
 	/// @param[in,out] f File stream where parameters will be printed
-	void print(FILE* f);
+	std::string getDescription() const;
 	/// @brief Delete all parameters as well as all parameter info
 	void freeMem();
 	/// @brief Delete only the parameters, without deleting the info
@@ -172,6 +175,9 @@ private:
 
 	std::unordered_map<std::string, ParamInfo> paramInfo;
 	std::unordered_map<std::string, ParamVal> paramValues;
+	mutable std::string description;
+	std::string programName;
+	mutable bool descriptionGenerated;
 };
 
 template<CommandLineArgs::Type ParamT, typename OutT>
@@ -202,6 +208,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::addParam(CommandLineArgs::Type param
 	if (it != paramInfo.end()) {
 		return ErrorCode::ParameterExists;
 	}
+	descriptionGenerated = false;
 	paramInfo[std::move(paramName)] = ParamInfo(std::forward<DescT>(description), paramT, required);
 	return ErrorCode::Success;
 }

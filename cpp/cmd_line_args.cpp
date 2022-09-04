@@ -8,7 +8,8 @@ namespace CMD {
 
 CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, ErrorCallbackT errorCallback) {
     // argv[0] is the name of the program (exe), that is why the for starts from 1
-
+    programName = argv[0];
+    descriptionGenerated = false;
     const int dashCount = 2;
     for (int i = 1; i < argc; ++i) {
         const char* arg = argv[i];
@@ -158,10 +159,18 @@ void CommandLineArgs::freeMem() {
 	paramInfo.clear();
 }
 
-void CommandLineArgs::print(FILE* f) {
-	for (auto& it : paramInfo) {
-		fprintf(f, "%s - %s\n", it.first.c_str(), it.second.description.c_str());
-	}
+std::string CommandLineArgs::getDescription() const {
+    if (!descriptionGenerated) {
+        description = std::format("Usage: {}", programName);
+        if (!paramInfo.empty()) {
+            description.append(" [OPTIONS]\nOptions:\n");
+            for (auto it : paramInfo) {
+                const std::string& required = it.second.required ? "[REQUIRED]" : "";
+                description += std::format("\t --{}, {} {}\n", it.first, it.second.description, required);
+            }
+        }
+    }
+    return description;
 }
 
 } // namespace CMD
