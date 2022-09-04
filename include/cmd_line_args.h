@@ -69,11 +69,6 @@ public:
 	/// @returns The code of the first error encountered during the parsing or ErrorCode::Success in case of no errors
 	[[nodiscard]]
 	ErrorCode parse(const int numArgs, char** args, ErrorCallbackT errorCallback = nullptr);
-	/// @brief Check if the parameter has been parsed.
-	/// @param[in] param The name of the parameter
-	/// @retval true if the parameter was parsed, false otherwise
-	[[nodiscard]]
-	bool isSet(const std::string& param) const;
 	/// @brief Show the parameters with their description
 	/// @param[in,out] f File stream where parameters will be printed
 	void print(FILE* f);

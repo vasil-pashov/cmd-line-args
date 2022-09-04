@@ -144,10 +144,6 @@ CommandLineArgs::~CommandLineArgs() {
 	freeMem();
 }
 
-bool CommandLineArgs::isSet(const std::string& param) const {
-	return paramValues.find(param) != paramValues.end();
-}
-
 void CommandLineArgs::freeValues() {
 	paramValues.clear();
 }
