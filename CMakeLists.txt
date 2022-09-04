@@ -33,6 +33,26 @@ if(${CMD_LINE_ARGS_WITH_TESTS})
 	list(APPEND FETCH_CONTENT_LIBS doctest)
 endif()
 
+if(${CMD_LINE_ARGS_WITH_DOCS})
+	find_package(Doxygen REQUIRED)
+
+	set(DOXYGEN_GENERATE_HTML YES)
+	set(DOXYGEN_GENERATE_MAN NO)
+
+	set(DOXYGEN_FILES
+		cpp/cmd_line_args.cpp
+		include/cmd_line_args.h
+	)
+
+	doxygen_add_docs(
+	    doxygen
+	    ${DOXYGEN_FILES}
+		ALL
+		USE_STAMP_FILE
+	    COMMENT "Generate documentation"
+	)
+endif()
+
 if(${CMD_LINE_ARGS_WITH_INSTALL})
 	include(CMakePackageConfigHelpers)
 	if(UNIX)
