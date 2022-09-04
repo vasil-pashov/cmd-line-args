@@ -13,11 +13,12 @@ TEST_SUITE("Parse Input") {
 	TEST_CASE("Flag param") {
 		const int argc = 2;
 		CMD::CommandLineArgs parser;
-		parser.addParam<bool>("flag", "A flag", false);
+		parser.addParam(CMD::CommandLineArgs::Type::Flag, "flag", "A flag", false);
 		SUBCASE("Flag param is set") {
 			char* argv[argc] = {"program", "-flag"};
 			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
-			REQUIRE(parser.getValue<bool>("flag").value());
+			const bool* val = parser.getValue<CMD::CommandLineArgs::Type::Flag>("flag");
+			REQUIRE(*val);
 		}
 
 		SUBCASE("Flag param cannot have a value") {
@@ -28,37 +29,26 @@ TEST_SUITE("Parse Input") {
 				CHECK_EQ(strcmp(input, "-flag=2"), 0);
 			};
 			REQUIRE_EQ(parser.parse(argc, argv, callback), CMD::CommandLineArgs::ErrorCode::FlagHasValue);
-			REQUIRE_FALSE(parser.getValue<bool>("flag").value());
+			REQUIRE_FALSE(*parser.getValue<CMD::CommandLineArgs::Type::Flag>("flag"));
 		}
 
 		SUBCASE("Flag which is defined but not added in the args is false") {
 			char* argv[1] = {"program"};
 			REQUIRE_EQ(parser.parse(1, argv), CMD::CommandLineArgs::ErrorCode::Success);
-			const std::optional flagVal = parser.getValue<bool>("flag");
+			const bool* flagVal = parser.getValue<CMD::CommandLineArgs::Type::Flag>("flag");
 			REQUIRE_FALSE(*flagVal);
 		}
-	}
-
-	TEST_CASE_TEMPLATE("Cannot access flag via other types", T, int, std::string) {
-		const int argc = 2;
-		CMD::CommandLineArgs parser;
-		parser.addParam<bool>("flag", "A flag", false);
-		char* argv[argc] = {"program", "-flag"};
-		REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
-
-		const std::optional opt = parser.getValue<T>("flag");
-		REQUIRE_FALSE(opt.has_value());
 	}
 
 	TEST_CASE("Int param") {
 		const int argc = 2;
 		CMD::CommandLineArgs parser;
-		parser.addParam<int>("intParam", "An integer", false);
+		parser.addParam(CMD::CommandLineArgs::Type::Int, "intParam", "An integer", false);
 		SUBCASE("Int param is set") {
 			char* argv[argc] = {"program", "-intParam=4"};
 			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
-			const std::optional val = parser.getValue<int>("intParam");
-			REQUIRE_EQ(val.value(), 4);
+			const int* val = parser.getValue<CMD::CommandLineArgs::Type::Int>("intParam");
+			REQUIRE_EQ(*val, 4);
 		}
 
 		SUBCASE("Int param must have a value") {
@@ -82,53 +72,22 @@ TEST_SUITE("Parse Input") {
 		}
 	}
 
-	TEST_CASE_TEMPLATE("Cannot access int via other types", T, bool , std::string) {
-		const int argc = 2;
-		CMD::CommandLineArgs parser;
-		parser.addParam<int>("val", "A val", false);
-		char* argv[argc] = {"program", "-val=132"};
-		REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
-
-		const std::optional opt = parser.getValue<T>("val");
-		REQUIRE_FALSE(opt.has_value());
-	}
-
 	TEST_CASE("String param") {
 		const int argc = 2;
 		CMD::CommandLineArgs parser;
-		parser.addParam<std::string>("stringParam", "A string", false);
+		parser.addParam(CMD::CommandLineArgs::Type::String, "stringParam", "A string", false);
 		SUBCASE("String param is set") {
 			char* argv[argc] = {"program", "-stringParam= random string with \n escaped \t chars "};
 			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
-			const std::optional<std::string>& val = parser.getValue<std::string>("stringParam");
-			REQUIRE_EQ(strcmp(val.value().c_str() , " random string with \n escaped \t chars "), 0);
+			const std::string* str = parser.getValue<CMD::CommandLineArgs::Type::String>("stringParam");
+			REQUIRE_EQ(strcmp(str->c_str() , " random string with \n escaped \t chars "), 0);
 		}
 
 		SUBCASE("String param can be empty") {
 			char* argv[argc] = {"program", "-stringParam="};
 			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
-			const std::optional<std::string>& val = parser.getValue<std::string>("stringParam");
-			REQUIRE_EQ(strcmp(val.value().c_str(), ""), 0);
+			const std::string* val = parser.getValue<CMD::CommandLineArgs::Type::String>("stringParam");
+			REQUIRE_EQ(strcmp(val->c_str(), ""), 0);
 		}
-	}
-
-	TEST_CASE_TEMPLATE("Cannot access string via other types", T, bool, int) {
-		const int argc = 2;
-		CMD::CommandLineArgs parser;
-		parser.addParam<std::string>("str", "A str", false);
-		char* argv[argc] = {"program", "-str=132"};
-		REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
-
-		const std::optional opt = parser.getValue<T>("str");
-		REQUIRE_FALSE(opt.has_value());
-	}
-
-	TEST_CASE_TEMPLATE("Undefined values have empty optionals", T, bool, int, std::string) {
-		CMD::CommandLineArgs parser;
-		const int argc = 1;
-		char* argv[argc] = {"program"};
-		REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
-		const std::optional opt = parser.getValue<T>("undefined");
-		REQUIRE_FALSE(opt.has_value());
 	}
 }

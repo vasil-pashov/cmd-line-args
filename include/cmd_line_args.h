@@ -7,6 +7,12 @@
 namespace CMD {
 
 /// @brief Class to parse and hold command line arguments
+///
+/// How to use:
+///		- Create CommandLineArgs class
+/// 	- Add parameters via CommandLineArgs::addParam
+/// 	- Parse the parameters passed to main via CommandLineArgs::parse
+/// 	- Request parameters via CommandLineArgs::getValue
 class CommandLineArgs {
 public:
 	CommandLineArgs() = default;
@@ -31,7 +37,30 @@ public:
 		UnknownParsingError ///< Unknown error during parsing
 	};
 
+	enum class Type {
+		Int,
+		String,
+		Flag
+	};
 
+	template<Type T>
+	struct TypeMatch {
+	};
+
+	template<>
+	struct TypeMatch<Type::Int> {
+		using type = int;
+	};
+
+	template<>
+	struct TypeMatch<Type::String> {
+		using type = std::string;
+	};
+
+	template<>
+	struct TypeMatch<Type::Flag> {
+		using type = bool;
+	};
 
 	/// @brief Type of the callback function which can be passed to parse
 	/// @param[in] code The code of the error
@@ -46,12 +75,12 @@ public:
 	/// @return If the passed type T is the same as the declared type of the parameter
 	/// and the parameter was passed then the optional will contain the value of the parameter.
 	/// If the type is bool and matches with the declared type:
-	/// a) If the parameter was passed, then the optional will contain true
-	/// b) If the parameter was not passed, then the optional will contain false.
+	///		- If the parameter was passed, then the optional will contain true
+	///		- If the parameter was not passed, then the optional will contain false.
 	/// If the types don't match or the parameter was not passed (except for the case of bool parameters)
 	/// then the optional will be empty.
-	template<typename T> [[nodiscard]]
-	std::optional<T> getValue(const std::string& param);
+	// template<typename T> [[nodiscard]]
+	// std::optional<T> getValue(const std::string& param);
 	/// Add a info for possible parameter that can come from the command line. All possible parameters must
 	/// be added before calling parse. Calling this does not add a parameter only information.
 	/// @tparam T The type of the parameter. It will be used when parsing the argv to ensure that the passed
@@ -59,8 +88,15 @@ public:
 	/// @param[in] name The name of the param, must not include - or =.
 	/// @param[in] description The description for the parameter can include everything. This is shown when calling print
 	/// @param[in] required if true the parameter is required. If a parameter is required but not found parse will return error
-	template<typename T, typename NameT, typename DescT> [[nodiscard]]
-	ErrorCode addParam(NameT&& name, DescT&& description, bool required);
+	// template<typename T, typename NameT, typename DescT> [[nodiscard]]
+	// ErrorCode addParam(NameT&& name, DescT&& description, bool required);
+
+	template<typename NameT, typename DescT> [[nodiscard]]
+		ErrorCode addParam(Type paramT, NameT&& name, DescT&& description, bool required);
+
+	template<Type ParamT, typename OutT = TypeMatch<ParamT>::type>
+	const OutT* getValue(const std::string& param);
+
 	/// @brief Parse command line arguments that come from main
 	/// @param[in] numArgs The number of the arguments
 	/// @param[in] args An array of arguments that comes from main function where
@@ -77,12 +113,6 @@ public:
 	/// @brief Delete only the parameters, without deleting the info
 	void freeValues();
 private:
-	enum class Type {
-		Int,
-		String,
-		Flag
-	};
-
 	/// @brief Match C++ type to internal type
 	/// @tparam T C++ type
 	/// @return Internal type used in ParamInfo
@@ -123,38 +153,35 @@ private:
 	std::unordered_map<std::string, ParamVal> paramValues;
 };
 
-template<typename T, typename NameT, typename DescT>
-CommandLineArgs::ErrorCode CommandLineArgs::addParam(NameT&& name, DescT&& description, bool required) {
-	constexpr Type t = getType<T>();
+template<CommandLineArgs::Type ParamT, typename OutT>
+const OutT* CommandLineArgs::getValue(const std::string& param) {
+	const auto valueIt = paramValues.find(param);
+
+	if (valueIt == paramValues.end()) {
+		if constexpr (ParamT == Type::Flag) {
+			const auto infoIt = paramInfo.find(param);
+			if (infoIt != paramInfo.end()) {
+				return &std::get<bool>((paramValues[param] = false));
+			}
+		}
+	}
+
+	if (!std::holds_alternative<OutT>(valueIt->second)) {
+		return nullptr;
+	}
+
+	return &std::get<OutT>(valueIt->second);
+}
+
+template<typename NameT, typename DescT>
+CommandLineArgs::ErrorCode CommandLineArgs::addParam(CommandLineArgs::Type paramT, NameT&& name, DescT&& description, bool required) {
 	std::string paramName = std::forward<NameT>(name);
 	auto it = paramInfo.find(paramName);
 	if (it != paramInfo.end()) {
 		return ErrorCode::ParameterExists;
 	}
-	constexpr Type type = getType<T>();
-	paramInfo[std::move(paramName)] = ParamInfo(std::forward<DescT>(description), type, required);
+	paramInfo[std::move(paramName)] = ParamInfo(std::forward<DescT>(description), paramT, required);
 	return ErrorCode::Success;
-}
-
-template<typename T>
-std::optional<T> CommandLineArgs::getValue(const std::string& param) {
-	const auto valueIt = paramValues.find(param);
-
-	if (valueIt == paramValues.end()) {
-		if constexpr (std::is_same_v<T, bool>) {
-			const auto infoIt = paramInfo.find(param);
-			if (infoIt != paramInfo.end()) {
-				return false;
-			}
-		}
-		return {};
-	}
-
-	if (!std::holds_alternative<T>(valueIt->second)) {
-		return {};
-	}
-
-	return std::get<T>(valueIt->second);
 }
 
 }
