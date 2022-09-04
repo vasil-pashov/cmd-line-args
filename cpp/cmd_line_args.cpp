@@ -8,10 +8,12 @@ namespace CMD {
 
 CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, ErrorCallbackT errorCallback) {
     // argv[0] is the name of the program (exe), that is why the for starts from 1
+
+    const int dashCount = 2;
     for (int i = 1; i < argc; ++i) {
         const char* arg = argv[i];
-        if (arg[0] == '-') {
-            int j = 1;
+        if (arg[0] == '-' && arg[1] == '-') {
+            int j = dashCount;
             bool hasParams = false;
             while (arg[j]) {
                 if (arg[j] == '=') {
@@ -21,10 +23,10 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
                 j++;
             }
 
-            // -someArg=someVal -> arg + 1 to start past the '-' from 's'
+            // -someArg=someVal -> arg + 2 to start past the '--' from 's'
             // j-1 is the length, subtract 1 to account for the parameter
-            const int nameLen = j - 1;
-            std::string name(arg + 1, nameLen);
+            const int nameLen = j - dashCount;
+            std::string name(arg + dashCount, nameLen);
             auto infoIterator = paramInfo.find(name);
             if (infoIterator == paramInfo.end()) {
                 const ErrorCode code = ErrorCode::UnknownParameter;
