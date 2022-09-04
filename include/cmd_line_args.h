@@ -13,6 +13,31 @@ namespace CMD {
 /// 	- Add parameters via CommandLineArgs::addParam
 /// 	- Parse the parameters passed to main via CommandLineArgs::parse
 /// 	- Request parameters via CommandLineArgs::getValue
+/// 
+/// Example usage:
+/// @code
+/// 	int main(int argc, char** argv) {
+///			using namespace CMD;
+///			CommandLineArgs parser;
+///			parser.addParam(CommandLineArgs::Type::Int, "intParam", false);
+/// 		parser.addParam(CommandLineArgs::Type::Flag, "flag", false);
+/// 		parser.addParam(CommandLineArgs::Type::String, "str", true);
+///			if(parser.parse(argc, argv) != CommandLineArgs::ErrorCode::Success) {
+/// 			return 1;
+///			}
+/// 
+///			const int* intParam = parser.getValue<CommandLineArgs::Type::Int>("intParam"); // If --intParam=value was not passed getValue returns nullptr
+///			if(intParam) {
+///				std::cout<<*intParam;
+/// 		}
+/// 
+///			const bool* flag = parser.getValue<CommandLineArgs::Type::Int>("flag") // Flag always return non null. If passed returns ptr to true otherwise to false
+///			std::cout<<*flag;
+/// 
+///			const std::string* str = parser.getValue<CommandLineArgs::Type::String>("str") // It was added with required=true it will always have non null ptr
+///			std::cout<<*str;
+/// 	}
+/// @endcode
 class CommandLineArgs {
 public:
 	CommandLineArgs() = default;
