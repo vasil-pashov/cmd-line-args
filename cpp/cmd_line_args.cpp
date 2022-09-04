@@ -99,7 +99,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
                 } break;
                 default: {
                     assert(false);
-                    const ErrorCode code = ErrorCode::Unknown;
+                    const ErrorCode code = ErrorCode::UnknownParsingError;
                     if (errorCallback) {
                         const std::string& error = std::format(
                             "Unknown input %s. All arguments must start with \'-\' and use \'=\' for setting value."
@@ -113,7 +113,7 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
             }
             paramValues[name] = val;
         } else {
-            const ErrorCode code = ErrorCode::WrongParamForat;
+            const ErrorCode code = ErrorCode::WrongParamFormat;
             if (errorCallback) {
                 const std::string& error = std::format(
                     "Unknown input %s. All arguments must start with \'-\' and use \'=\' for setting value."
