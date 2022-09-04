@@ -38,6 +38,14 @@ TEST_SUITE("Parse Input") {
 			const bool* flagVal = parser.getValue<CMD::CommandLineArgs::Type::Flag>("flag");
 			REQUIRE_FALSE(*flagVal);
 		}
+
+		SUBCASE("Flag param cannot be accessed via other types") {
+			char* argv[argc] = {"program", "-flag"};
+			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
+
+			REQUIRE_EQ(parser.getValue<CMD::CommandLineArgs::Type::Int>("flag"), nullptr);
+			REQUIRE_EQ(parser.getValue<CMD::CommandLineArgs::Type::String>("flag"), nullptr);
+		}
 	}
 
 	TEST_CASE("Int param") {
@@ -59,6 +67,7 @@ TEST_SUITE("Parse Input") {
 				CHECK_EQ(strcmp(input, "-intParam"), 0);
 			};
 			REQUIRE_EQ(parser.parse(argc, argv, callback), CMD::CommandLineArgs::ErrorCode::MissingValue);
+			REQUIRE_EQ(parser.getValue<CMD::CommandLineArgs::Type::Int>("intParam"), nullptr);
 		}
 
 		SUBCASE("Int param must have proper type") {
@@ -69,6 +78,15 @@ TEST_SUITE("Parse Input") {
 				CHECK_EQ(strcmp(input, "-intParam=43asd"), 0);
 			};
 			REQUIRE_EQ(parser.parse(argc, argv, callback), CMD::CommandLineArgs::ErrorCode::WrongValueType);
+			REQUIRE_EQ(parser.getValue<CMD::CommandLineArgs::Type::Int>("intParam"), nullptr);
+		}
+
+		SUBCASE("Int param cannot be accessed via other types") {
+			char* argv[argc] = {"program", "-intParam=123"};
+			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
+
+			REQUIRE_EQ(parser.getValue<CMD::CommandLineArgs::Type::Flag>("intParam"), nullptr);
+			REQUIRE_EQ(parser.getValue<CMD::CommandLineArgs::Type::String>("intParam"), nullptr);
 		}
 	}
 
@@ -83,11 +101,19 @@ TEST_SUITE("Parse Input") {
 			REQUIRE_EQ(strcmp(str->c_str() , " random string with \n escaped \t chars "), 0);
 		}
 
-		SUBCASE("String param can be empty") {
+		SUBCASE("String param cannot be empty") {
 			char* argv[argc] = {"program", "-stringParam="};
-			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
+			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::MissingValue);
 			const std::string* val = parser.getValue<CMD::CommandLineArgs::Type::String>("stringParam");
-			REQUIRE_EQ(strcmp(val->c_str(), ""), 0);
+			REQUIRE_EQ(val, nullptr);
+		}
+
+		SUBCASE("String param cannot be accessed via other types") {
+			char* argv[argc] = {"program", "-stringParam=123"};
+			REQUIRE_EQ(parser.parse(argc, argv), CMD::CommandLineArgs::ErrorCode::Success);
+
+			REQUIRE_EQ(parser.getValue<CMD::CommandLineArgs::Type::Flag>("stringParam"), nullptr);
+			REQUIRE_EQ(parser.getValue<CMD::CommandLineArgs::Type::Int>("stringParam"), nullptr);
 		}
 	}
 }

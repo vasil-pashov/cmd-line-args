@@ -92,6 +92,9 @@ CommandLineArgs::ErrorCode CommandLineArgs::parse(const int argc, char** argv, E
                     val = res;
                 } break;
                 case Type::String: {
+                    if (arg[paramStartIndex] == '\0') {
+                        return ErrorCode::MissingValue;
+                    }
                     val = std::string(arg + paramStartIndex);
                 } break;
                 case Type::Flag: {

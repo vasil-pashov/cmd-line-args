@@ -69,18 +69,6 @@ public:
 	/// @param[in] description A description of the error
 	typedef void(*ErrorCallbackT)(ErrorCode code, const char* param, const char* input, const char* description);
 
-	/// @brief Get the value of a parameter
-	/// @tparam T The type of the parameter.
-	/// @param[in] param The name of the parameter
-	/// @return If the passed type T is the same as the declared type of the parameter
-	/// and the parameter was passed then the optional will contain the value of the parameter.
-	/// If the type is bool and matches with the declared type:
-	///		- If the parameter was passed, then the optional will contain true
-	///		- If the parameter was not passed, then the optional will contain false.
-	/// If the types don't match or the parameter was not passed (except for the case of bool parameters)
-	/// then the optional will be empty.
-	// template<typename T> [[nodiscard]]
-	// std::optional<T> getValue(const std::string& param);
 	/// Add a info for possible parameter that can come from the command line. All possible parameters must
 	/// be added before calling parse. Calling this does not add a parameter only information.
 	/// @tparam T The type of the parameter. It will be used when parsing the argv to ensure that the passed
@@ -88,20 +76,28 @@ public:
 	/// @param[in] name The name of the param, must not include - or =.
 	/// @param[in] description The description for the parameter can include everything. This is shown when calling print
 	/// @param[in] required if true the parameter is required. If a parameter is required but not found parse will return error
-	// template<typename T, typename NameT, typename DescT> [[nodiscard]]
-	// ErrorCode addParam(NameT&& name, DescT&& description, bool required);
-
 	template<typename NameT, typename DescT> [[nodiscard]]
-		ErrorCode addParam(Type paramT, NameT&& name, DescT&& description, bool required);
+	ErrorCode addParam(Type paramT, NameT&& name, DescT&& description, bool required);
 
+	/// @brief Get the value of a parameter
+	/// @tparam ParamT The type of the parameter. One of CMD::CommandLineArgs::Type.
+	/// @param[in] param The name of the parameter
+	/// @return Pointer to the value or nullptr.
+	/// - If the passed type T is the same as the declared type of the parameter
+	///   and the parameter was passed then return pointer to the value of the parameter.
+	/// - If the type is bool and matches with the declared type:
+	///		- If the parameter was passed, then the pointer is valid and points to true.
+	///		- If the parameter was not passed, then the pointer is valid and points to false.
+	/// - If the types don't match or the parameter was not passed (except for the case of bool parameters)
+	///   then return nullptr.
 	template<Type ParamT, typename OutT = TypeMatch<ParamT>::type>
 	const OutT* getValue(const std::string& param);
 
-	/// @brief Parse command line arguments that come from main
+	/// @brief Parse command line arguments that are parameters passed to main function.
 	/// @param[in] numArgs The number of the arguments
 	/// @param[in] args An array of arguments that comes from main function where
+	/// args[0] is the name of the program, args[1] is the first argument and so on.
 	/// @param[in] errorCallback A function which will be called if an error in the parsing happens
-	/// args[0] is the name of the program, args[1] is the first argument and so on
 	/// @returns The code of the first error encountered during the parsing or ErrorCode::Success in case of no errors
 	[[nodiscard]]
 	ErrorCode parse(const int numArgs, char** args, ErrorCallbackT errorCallback = nullptr);
@@ -155,22 +151,23 @@ private:
 
 template<CommandLineArgs::Type ParamT, typename OutT>
 const OutT* CommandLineArgs::getValue(const std::string& param) {
-	const auto valueIt = paramValues.find(param);
+	auto it = paramValues.find(param);
 
-	if (valueIt == paramValues.end()) {
+	if (it == paramValues.end()) {
 		if constexpr (ParamT == Type::Flag) {
 			const auto infoIt = paramInfo.find(param);
-			if (infoIt != paramInfo.end()) {
+			if (infoIt != paramInfo.end() && infoIt->second.type == Type::Flag) {
 				return &std::get<bool>((paramValues[param] = false));
 			}
 		}
-	}
-
-	if (!std::holds_alternative<OutT>(valueIt->second)) {
 		return nullptr;
 	}
-
-	return &std::get<OutT>(valueIt->second);
+	
+	if (!std::holds_alternative<OutT>(it->second)) {
+		return nullptr;
+	}
+	
+	return &std::get<OutT>(it->second);
 }
 
 template<typename NameT, typename DescT>
