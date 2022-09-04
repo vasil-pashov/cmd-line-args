@@ -13,7 +13,19 @@
 /// It supports parameters with types and does type checking for each parameter. For supported types
 /// see CMD::CommandLineArgs::Type.
 /// 
-/// Example usage:
+/// Currently supports only long parameter names starting with two dashes -- followed by the name of the parameter.
+/// Non flag parameters must have a value. It is passed by an equals sign with now whitespace between the equals
+/// the name of the parameter and the value of the parameter.
+/// 
+/// Positional arguments are not supported at the moment, however some arguments can be marked as required. Check
+/// CMD::CommandLineArgs::addParam to see how to add required parameter.
+/// 
+/// Usage:
+///	- Create CMD::CommandLineArgs class
+/// - Add parameters via CMD::CommandLineArgs::addParam
+/// - Parse the parameters passed to main via CMD::CommandLineArgs::parse
+/// - Request parameters via CMD::CommandLineArgs::getValue
+/// 
 /// @code
 /// 	int main(int argc, char** argv) {
 ///			using namespace CMD;
