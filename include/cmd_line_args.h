@@ -4,6 +4,40 @@
 #include <optional>
 #include <variant>
 
+/// @mainpage Command Line Arguments Parser
+///
+/// Parses command line arguments passed to programs of the form:
+/// @code
+///		program --param=value
+/// @endcode
+/// It supports parameters with types and does type checking for each parameter. For supported types
+/// see CMD::CommandLineArgs::Type.
+/// 
+/// Example usage:
+/// @code
+/// 	int main(int argc, char** argv) {
+///			using namespace CMD;
+///			CommandLineArgs parser;
+///			parser.addParam(CommandLineArgs::Type::Int, "intParam", false);
+/// 		parser.addParam(CommandLineArgs::Type::Flag, "flag", false);
+/// 		parser.addParam(CommandLineArgs::Type::String, "str", true);
+///			if(parser.parse(argc, argv) != CommandLineArgs::ErrorCode::Success) {
+/// 			return 1;
+///			}
+/// 
+///			const int* intParam = parser.getValue<CommandLineArgs::Type::Int>("intParam"); // If --intParam=value was not passed, getValue returns nullptr
+///			if(intParam) {
+///				std::cout<<*intParam;
+/// 		}
+/// 
+///			const bool* flag = parser.getValue<CommandLineArgs::Type::Int>("flag") // Flag always return non null. If passed returns ptr to true, otherwise to false
+///			std::cout<<*flag;
+/// 
+///			const std::string* str = parser.getValue<CommandLineArgs::Type::String>("str") // It was added with required=true it will always have non null ptr
+///			std::cout<<*str;
+/// 	}
+/// @endcode
+
 namespace CMD {
 
 /// @brief Class to parse and hold command line arguments
@@ -26,12 +60,12 @@ namespace CMD {
 /// 			return 1;
 ///			}
 /// 
-///			const int* intParam = parser.getValue<CommandLineArgs::Type::Int>("intParam"); // If --intParam=value was not passed getValue returns nullptr
+///			const int* intParam = parser.getValue<CommandLineArgs::Type::Int>("intParam"); // If --intParam=value was not passed, getValue returns nullptr
 ///			if(intParam) {
 ///				std::cout<<*intParam;
 /// 		}
 /// 
-///			const bool* flag = parser.getValue<CommandLineArgs::Type::Int>("flag") // Flag always return non null. If passed returns ptr to true otherwise to false
+///			const bool* flag = parser.getValue<CommandLineArgs::Type::Int>("flag") // Flag always return non null. If passed returns ptr to true, otherwise to false
 ///			std::cout<<*flag;
 /// 
 ///			const std::string* str = parser.getValue<CommandLineArgs::Type::String>("str") // It was added with required=true it will always have non null ptr
@@ -65,12 +99,14 @@ public:
 		UnknownParsingError ///< Unknown error during parsing
 	};
 
+	/// @brief Supported parameter types
 	enum class Type {
 		Int,
 		String,
 		Flag
 	};
 
+private:
 	template<Type T>
 	struct TypeMatch {
 	};
@@ -89,6 +125,7 @@ public:
 	struct TypeMatch<Type::Flag> {
 		using type = bool;
 	};
+public:
 
 	/// @brief Type of the callback function which can be passed to parse
 	/// @param[in] code The code of the error
