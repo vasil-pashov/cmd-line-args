@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
   if(intParam) {
     std::cout<<*intParam;
   }
-  const bool* flag = parser.getValue<CommandLineArgs::Type::Int>("flag") // Flag always return non null. If passed returns ptr to true, otherwise to false
+  const bool* flag = parser.getValue<CommandLineArgs::Type::Flag>("flag") // Flag always return non null. If passed returns ptr to true, otherwise to false
   std::cout<<*flag;
   const std::string* str = parser.getValue<CommandLineArgs::Type::String>("str") // It was added with required=true it will always have non null ptr
   std::cout<<*str;
